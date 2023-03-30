@@ -78,6 +78,9 @@ export class BaseAnnotationObj implements BaseAnnotation {
     type_encoded: number[] = []
     rect: number[] = []
     contents: string = ""
+    title: string = ""
+    alternate_description: string = ""
+    default_appearance: string = ""
     id: string = ""// /NM
     updateDate: string | Date = ""// /M
     annotationFlags: AnnotationFlags | undefined // /F
@@ -409,6 +412,22 @@ export class BaseAnnotationObj implements BaseAnnotation {
         this.type = annot_obj["/Subtype"]
         this.rect = annot_obj["/Rect"]
 
+
+        // /T: This is the "Title" property of an annotation. It represents a short description or title of the annotation.
+        //
+        // /TU: This is the "Alternate Description" property of an annotation. It is used to provide an alternate text description of the annotation, which can be read by screen readers for accessibility purposes.
+        //
+        // /DA: This is the "Default Appearance" property of an annotation. It specifies the default appearance of the annotation, such as the font, font size, and color.
+
+        if (annot_obj["/T"])
+            this.title = Util.convertUnicodeToString(cryptoInterface.decrypt(annot_obj["/T"], this.object_id));
+
+        if (annot_obj["/TU"])
+            this.alternate_description = Util.convertUnicodeToString(cryptoInterface.decrypt(annot_obj["/TU"], this.object_id));
+
+        if (annot_obj["/DA"])
+            this.default_appearance = Util.convertUnicodeToString(cryptoInterface.decrypt(annot_obj["/DA"], this.object_id));
+
         if (annot_obj["/M"])
             this.updateDate = Util.convertUnicodeToString(cryptoInterface.decrypt(annot_obj["/M"], this.object_id))
 
@@ -426,6 +445,10 @@ export class BaseAnnotationObj implements BaseAnnotation {
 
         if (annot_obj["/AP"])
             this.appearanceStream = AppearanceStreamParser.parse(this, annot_obj["/AP"])
+
+        if (!this.contents) {
+            this.contents = this.title || this.alternate_description || this.default_appearance;
+        }
     }
 }
 
